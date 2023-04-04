@@ -7,7 +7,8 @@ type MuralParams = {
     position: Vector3,
     rotation: Quaternion,
     mural: number,
-    server_url: string
+    server_url_http: string
+    server_url_ws: string
 }
 
 /**
@@ -57,7 +58,7 @@ export function CreateMural (mural_params: MuralParams) {
         0, 1,
     ]
     
-    const mural_texture = new Texture(mural_params.server_url + "/image/"+mural_params.mural, {samplingMode: 0})
+    const mural_texture = new Texture(mural_params.server_url_http + "/image/"+mural_params.mural, {samplingMode: 0})
     const mural_material = new Material()
     mural_material.albedoTexture = mural_texture
 
@@ -104,7 +105,7 @@ export function CreateMural (mural_params: MuralParams) {
     const IMAGE_SIZE = [320/10,240/10]; 
     const [WIDTH, HEIGHT] = IMAGE_SIZE; //originSize
     const originS = [WIDTH, HEIGHT];
-    const ENDPOINT = mural_params.server_url + "/validate";
+    const ENDPOINT = mural_params.server_url_http + "/validate";
 
 
     async function connect_room() {
@@ -115,7 +116,7 @@ export function CreateMural (mural_params: MuralParams) {
             return;
         }
 
-        connect("my_room", mural_params.server_url, {address: user?.publicKey, mural: mural_params.mural}).then(async (room) => {
+        connect("my_room", mural_params.server_url_ws, {address: user?.publicKey, mural: mural_params.mural}).then(async (room) => {
             muralroom = room
             connected = true
 
@@ -244,7 +245,7 @@ export function CreateMural (mural_params: MuralParams) {
                 currentSyncId = receivedSyncId;
                 this.lastSyncTime = 0;
                 const new_texture = new Texture(
-                    mural_params.server_url + "/image/"+mural_params.mural+"?"+currentSyncId, {samplingMode: 0}
+                    mural_params.server_url_http + "/image/"+mural_params.mural+"?"+currentSyncId, {samplingMode: 0}
                 ) 
                 mural_material.albedoTexture = new_texture;
             }
