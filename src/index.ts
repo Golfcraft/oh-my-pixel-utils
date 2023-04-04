@@ -74,7 +74,7 @@ export function CreateMural (mural_params: MuralParams) {
     const background = new Entity()
     const background_plane = new PlaneShape()
     
-    const background_texture = new Texture("images/background.png")
+    const background_texture = new Texture(mural_params.server_url_http + "/background")
     const background_material = new Material()
     background_material.albedoTexture = background_texture
 
