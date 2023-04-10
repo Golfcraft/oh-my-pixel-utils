@@ -27,6 +27,8 @@ export function CreateMural (mural_params: MuralParams) {
     var currentSyncId = -1
     var connected = false
     var selected_color = {r:0, g:0, b:0, a:0}
+    var balance = 0
+    var last_message = ""
 
     var paint_queue: Array<any> = []
 
@@ -102,7 +104,35 @@ export function CreateMural (mural_params: MuralParams) {
     status_shape.value = "Connecting..."
 
     //-----------------------------------------------------------------------------------------------------
-    const IMAGE_SIZE = [320/10,240/10]; 
+    //Color sample entity
+    const color_sample = new Entity()
+    const color_sample_shape = new PlaneShape()
+    color_sample.addComponent(color_sample_shape)
+    color_sample.addComponent(new Transform({
+        position: new Vector3(-3.5, -0.5, -0.01),
+        scale: new Vector3(0.5, 0.5, 0.5)
+    }))
+    color_sample.setParent(main)
+    const sample_material = new Material()
+    sample_material.albedoColor = new Color3(0, 0, 0)
+    color_sample.addComponent(sample_material)
+
+    //-----------------------------------------------------------------------------------------------------
+    //Balance text entity
+    const balance_entity = new Entity()
+    const balance_shape = new TextShape()
+    balance_entity.addComponent(balance_shape)
+    balance_entity.addComponent(new Transform({
+        position: new Vector3(-4.85, 0.05, -0.01),
+    }))
+    balance_entity.setParent(main)
+    balance_shape.hTextAlign = "left"
+    balance_shape.fontSize = 2
+    balance_shape.value = "?"
+
+    //-----------------------------------------------------------------------------------------------------
+    const IMAGE_SIZE = [128,96]; 
+    const PALETTE_LIMIT = 87;
     const [WIDTH, HEIGHT] = IMAGE_SIZE; //originSize
     const originS = [WIDTH, HEIGHT];
     const ENDPOINT = mural_params.server_url_http + "/validate";
@@ -123,7 +153,7 @@ export function CreateMural (mural_params: MuralParams) {
             setMessage("Connected!")
             function onClickImageCallback(coord: any){
                 log('callback function', coord)
-                if (coord[1] >= 21) {
+                if (coord[1] >= PALETTE_LIMIT) {
                     room.send("pick_color", coord)
                     return
                 };
@@ -175,10 +205,18 @@ export function CreateMural (mural_params: MuralParams) {
 
             room.onMessage("color",(message) => {
                 selected_color = message
+                refreshPanel()
+            });
+
+            room.onMessage("balance",(message) => {
+                balance = message["msg"]
+                refreshPanel()
             });
 
             room.onMessage("msg",(message) => {
-                setMessage(message["msg"])
+                //setMessage(message["msg"])
+                last_message = message["msg"]
+                refreshPanel()
             });
 
             room.onLeave(()=>{
@@ -215,9 +253,9 @@ export function CreateMural (mural_params: MuralParams) {
             }
 
             if (!is_user_valid) {
-                connect_interval = 60;
-                await room.leave();
-                setMessage("Validation failed\nretrying...");
+                connect_interval = 60
+                await room.leave()
+                setMessage("Validation failed\nretrying...")
             }
             
 
@@ -227,8 +265,16 @@ export function CreateMural (mural_params: MuralParams) {
     };
 
 
-    function setMessage(msg: string) {
-        status_shape.value = msg
+    function refreshPanel() {
+        status_shape.value = last_message
+        balance_shape.value = ""+balance
+        sample_material.albedoColor = new Color3(selected_color.r/255, selected_color.g/255, selected_color.b/255)
+    }
+
+
+    function setMessage(msg) {
+        last_message = msg
+        refreshPanel()
     }
 
 
