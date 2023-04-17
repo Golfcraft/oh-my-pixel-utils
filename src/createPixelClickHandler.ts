@@ -5,23 +5,23 @@ export function createPixelClickHandler(planeEntity: Entity, originSize: number[
     const HEIGHT = originSize[1];
     
     const cursors: Array<Entity> = [];
+    var main_cursor: Entity
     
     
     //-----------------------------------------------------------------------------------------------------
  
     const callbacks = { onClickImageCallback };
     planeEntity.addComponentOrReplace(new OnPointerDown((e) => {
-        var planeTransform = planeEntity.getComponent(Transform);
-        var mainTransform = planeEntity.getParent()?.getComponent(Transform);
+        var planeTransform = planeEntity.getComponent(Transform)
+        var mainTransform = planeEntity.getParent()?.getParent()?.getComponent(Transform)
         const mixedTransform = new Transform({
           position: mainTransform?.position,
           rotation: mainTransform?.rotation,
           scale: planeTransform.scale
         })
 
-        const {x,y} = getNormalizedLocalHitPoint(e.hit, mixedTransform);
-        const [px,py] = getPixel(x,y);
-        log([px,py])
+        const {x,y} = getNormalizedLocalHitPoint(e.hit, mixedTransform)
+        const [px,py] = getPixel(x,y)
         callbacks.onClickImageCallback([px,py]);
     },
     {
@@ -30,7 +30,13 @@ export function createPixelClickHandler(planeEntity: Entity, originSize: number[
     ))
 //----------------------------------------------------------------------------------------------------- 
 
-    const AddCursor = (x:number, y:number, color:any) => {
+    const CursorPosition = (x:number, y:number): Vector3 => {
+      const PIXEL_SIZE = [1/WIDTH/2, 1/HEIGHT/2];
+      const [PX, PY] = PIXEL_SIZE;
+      return new Vector3(-0.5+PX+(PX*x*2),(0.5-PY-(PY*y*2))*-1,0.0001);
+    }
+
+    function CreateCursor(x:number, y:number, color:any) {
       const pixel = new Entity();
       const pixelMaterial = new Material();
       pixelMaterial.albedoColor = new Color3(color.r/255, color.g/255, color.b/255);
@@ -45,34 +51,75 @@ export function createPixelClickHandler(planeEntity: Entity, originSize: number[
         position: CursorPosition(x, y)
       }));
       pixel.setParent(planeEntity)
-
-      cursors.push(pixel)
-      log("AddCursor")
+      return pixel
     }
 
-    const CursorPosition = (x:number, y:number): Vector3 => {
-      const PIXEL_SIZE = [1/WIDTH/2, 1/HEIGHT/2];
-      const [PX, PY] = PIXEL_SIZE;
-      return new Vector3(-0.5+PX+(PX*x*2),0.5-PY-(PY*y*2),-0.0001);
+    main_cursor = CreateCursor(0, 0, {r:0, g:0, b:0})
+
+    const AddCursor = (x:number, y:number, color:any) => {
+      cursors.push(CreateCursor(x, y, color))
+    }
+
+    const SetColor = (color:any) => {
+      const pixelMaterial = new Material();
+      pixelMaterial.albedoColor = new Color3(color.r/255, color.g/255, color.b/255);
+      main_cursor.addComponentOrReplace(pixelMaterial);
     }
 
 //-----------------------------------------------------------------------------------------------------     
     function getPixel(x:number,y:number){
       return [Math.floor(WIDTH*x), Math.floor(HEIGHT*y)]
-    }   
+    }
+//----------------------------------------------------------------------------------------------------- 
+    class RaySystem implements ISystem {
+      ray_time: number = 0.0
+
+      update(delta:number) {
+        this.ray_time += delta
+        if (this.ray_time > 0.1) {
+          this.ray_time = 0
+        } else {
+          return
+        }
+        let physicsCast = PhysicsCast.instance
+        let rayFromCamera = physicsCast.getRayFromCamera(5)
+        if (rayFromCamera.origin.x == 0) { return }
+        physicsCast.hitFirst(
+          rayFromCamera,
+          (e) => {
+            if (!e.didHit) { return }
+            if (e.entity.entityId != planeEntity.uuid) { return }
+            // TODO move to function
+            var planeTransform = planeEntity.getComponent(Transform)
+            var mainTransform = planeEntity.getParent()?.getParent()?.getComponent(Transform)
+            const mixedTransform = new Transform({
+              position: mainTransform?.position,
+              rotation: mainTransform?.rotation,
+              scale: planeTransform.scale
+            })
+            //
+            const {x,y} = getNormalizedLocalHitPoint(e, mixedTransform)
+            const [px,py] = getPixel(x,y)
+            main_cursor.getComponent(Transform).position = CursorPosition(px, py)
+          }
+        )
+        
+      }
+    }
+    engine.addSystem(new RaySystem());
 //-----------------------------------------------------------------------------------------------------
     return {
       Dispose: ()=>{
         planeEntity.removeComponent(OnPointerDown);
       },
       HideCursor: () => {
-        log("HideCursors")
         for (var n=0; n<cursors.length; n++) { 
           engine.removeEntity(cursors[n])
         }
         cursors.length = 0;
       },
-      AddCursor
+      AddCursor,
+      SetColor
     }
 }
 

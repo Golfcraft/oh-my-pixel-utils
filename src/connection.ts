@@ -21,7 +21,7 @@ export async function connect(roomName: string, endpoint:string, options: any = 
     options.realm = realm?.displayName;
     options.userData = await getUserData();
 
-    log("userData:", options.userData);
+    //log("userData:", options.userData);
 
     // const ENDPOINT = "wss://hept-j.colyseus.dev";
     /*const ENDPOINT = (isPreview)

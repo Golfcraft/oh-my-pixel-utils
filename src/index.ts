@@ -44,11 +44,33 @@ export function CreateMural (mural_params: MuralParams) {
     }))
     engine.addEntity(main)
 
+    const modArea = new Entity()
+    modArea.addComponent(new AvatarModifierArea({
+        area: { box: new Vector3(6, 4, 2) },
+        modifiers: [AvatarModifiers.DISABLE_PASSPORTS, AvatarModifiers.HIDE_AVATARS],
+    }))
+    //modArea.addComponent(new BoxShape()) // Debug
+    modArea.addComponent(new Transform({
+        position: new Vector3(0, 0, -1),
+        scale: new Vector3(6, 4, 2),
+    }))
+    modArea.setParent(main)
+
+    //-----------------------------------------------------------------------------------------------------
+    //fix_rotation entity
+    // uvs can't be used, rotation must be used instead
+    const fix_rotation = new Entity()
+    fix_rotation.addComponent(new Transform({
+        rotation: Quaternion.Euler(180, 0, 0),
+    }))
+    fix_rotation.setParent(main)
+
     //-----------------------------------------------------------------------------------------------------
     //mural entity
     const mural = new Entity()
     const mural_plane = new PlaneShape()
-    mural_plane.uvs = [
+    // Can't use uvs, it makes the object invisible to raycast
+    /*mural_plane.uvs = [
         0, 0,
         1, 0,
         1, 1,
@@ -59,6 +81,8 @@ export function CreateMural (mural_params: MuralParams) {
         1, 1,
         0, 1,
     ]
+    mural_plane.isPointerBlocker = true
+    mural_plane.withCollisions = true*/
     
     const mural_texture = new Texture(mural_params.server_url_http + "/image/"+mural_params.mural, {samplingMode: 0})
     const mural_material = new Material()
@@ -69,7 +93,7 @@ export function CreateMural (mural_params: MuralParams) {
     mural.addComponent(new Transform({
         scale: new Vector3(6, 4 ,1)
     }))
-    mural.setParent(main)
+    mural.setParent(fix_rotation)
 
     //-----------------------------------------------------------------------------------------------------
     //background entity
@@ -152,12 +176,17 @@ export function CreateMural (mural_params: MuralParams) {
 
             setMessage("Connected!")
             function onClickImageCallback(coord: any){
-                log('callback function', coord)
+                //log('callback function', coord)
                 if (coord[1] >= PALETTE_LIMIT) {
                     room.send("pick_color", coord)
                     return
                 };
                 lastPaint = 0
+                for (var n=0; n<paint_queue.length; n++) {
+                    if (paint_queue[n].x == coord[0] && paint_queue[n].y == coord[1]) {
+                        return
+                    }
+                }
                 paint_queue.push({
                     x: coord[0],
                     y: coord[1],
@@ -166,9 +195,10 @@ export function CreateMural (mural_params: MuralParams) {
                     b: selected_color.b,
                     a: selected_color.a,
                 })
+                //log(paint_queue)
                 AddCursor(coord[0], coord[1], selected_color)
             };
-            const {Dispose, AddCursor, HideCursor} = createPixelClickHandler(mural, originS, onClickImageCallback);
+            const {Dispose, AddCursor, HideCursor, SetColor} = createPixelClickHandler(mural, originS, onClickImageCallback);
 
             /*room.state.listen("syncId", (num: number) => {
                 if (num > receivedSyncId) {
@@ -205,6 +235,7 @@ export function CreateMural (mural_params: MuralParams) {
 
             room.onMessage("color",(message) => {
                 selected_color = message
+                SetColor(selected_color)
                 refreshPanel()
             });
 
