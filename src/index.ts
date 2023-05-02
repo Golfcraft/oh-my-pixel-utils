@@ -362,4 +362,13 @@ export function CreateMural (mural_params: MuralParams) {
     }
     engine.addSystem(new PaintSystem());
 
+
+    return {
+        hideMural: () => {
+            engine.removeEntity(main)
+        },
+        showMural: () => {
+            engine.addEntity(main)
+        },
+    }
 }
