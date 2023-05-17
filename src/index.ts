@@ -27,7 +27,7 @@ export function CreateMural (mural_params: MuralParams) {
     var currentSyncId = -1
     var connected = false
     var selected_color = {r:0, g:0, b:0, a:0}
-    var balance = 0
+    var balance = -1
     var last_message = ""
 
     var paint_queue: Array<any> = []
@@ -120,11 +120,12 @@ export function CreateMural (mural_params: MuralParams) {
     const status_shape = new TextShape()
     status.addComponent(status_shape)
     status.addComponent(new Transform({
-        position: new Vector3(-4.85, -1.2, -0.01),
+        position: new Vector3(-4.83, -0.2, -0.01),
     }))
     status.setParent(main)
     status_shape.hTextAlign = "left"
     status_shape.fontSize = 2
+    status_shape.color = Color3.Black()
     status_shape.value = "Connecting..."
 
     //-----------------------------------------------------------------------------------------------------
@@ -133,8 +134,8 @@ export function CreateMural (mural_params: MuralParams) {
     const color_sample_shape = new PlaneShape()
     color_sample.addComponent(color_sample_shape)
     color_sample.addComponent(new Transform({
-        position: new Vector3(-3.5, -0.5, -0.01),
-        scale: new Vector3(0.5, 0.5, 0.5)
+        position: new Vector3(-3.36, -1.01, -0.01),
+        scale: new Vector3(0.22, 0.22, 0.22)
     }))
     color_sample.setParent(main)
     const sample_material = new Material()
@@ -147,11 +148,12 @@ export function CreateMural (mural_params: MuralParams) {
     const balance_shape = new TextShape()
     balance_entity.addComponent(balance_shape)
     balance_entity.addComponent(new Transform({
-        position: new Vector3(-4.85, 0.05, -0.01),
+        position: new Vector3(-3.3, 0.45, -0.01),
     }))
     balance_entity.setParent(main)
-    balance_shape.hTextAlign = "left"
-    balance_shape.fontSize = 2
+    balance_shape.hTextAlign = "right"
+    balance_shape.fontSize = 3
+    balance_shape.color = Color3.Black()
     balance_shape.value = "?"
 
     //-----------------------------------------------------------------------------------------------------
@@ -298,7 +300,7 @@ export function CreateMural (mural_params: MuralParams) {
 
     function refreshPanel() {
         status_shape.value = last_message
-        balance_shape.value = ""+balance
+        balance_shape.value = balance<0 ? "-" : ""+balance
         sample_material.albedoColor = new Color3(selected_color.r/255, selected_color.g/255, selected_color.b/255)
     }
 

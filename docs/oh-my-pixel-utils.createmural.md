@@ -9,7 +9,10 @@ A Mural Creator function
 <b>Signature:</b>
 
 ```typescript
-export declare function CreateMural(mural_params: MuralParams): void;
+export declare function CreateMural(mural_params: MuralParams): {
+    hideMural: () => void;
+    showMural: () => void;
+};
 ```
 
 ## Parameters
@@ -20,7 +23,7 @@ export declare function CreateMural(mural_params: MuralParams): void;
 
 <b>Returns:</b>
 
-void
+{ hideMural: () =&gt; void; showMural: () =&gt; void; }
 
 Null
 

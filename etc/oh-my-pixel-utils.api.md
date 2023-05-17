@@ -9,7 +9,10 @@
 // Warning: (ae-forgotten-export) The symbol "MuralParams" needs to be exported by the entry point index.d.ts
 //
 // @public
-export function CreateMural(mural_params: MuralParams): void;
+export function CreateMural(mural_params: MuralParams): {
+    hideMural: () => void;
+    showMural: () => void;
+};
 
 // (No @packageDocumentation comment for this package)
 
