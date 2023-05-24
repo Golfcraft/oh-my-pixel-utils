@@ -55,6 +55,8 @@ export function createPixelClickHandler(planeEntity: Entity, originSize: number[
     }
 
     main_cursor = CreateCursor(0, 0, {r:0, g:0, b:0})
+    // TODO hidding cursor until alignment bug is fixed on DCL client
+    main_cursor.getComponent(PlaneShape).visible = false
 
     const AddCursor = (x:number, y:number, color:any) => {
       cursors.push(CreateCursor(x, y, color))
