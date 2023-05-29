@@ -85,8 +85,8 @@ export function CreateMural (mural_params: MuralParams) {
     mural_plane.withCollisions = true*/
     
     const mural_texture = new Texture(mural_params.server_url_http + "/image/"+mural_params.mural, {samplingMode: 0})
-    const mural_material = new Material()
-    mural_material.albedoTexture = mural_texture
+    const mural_material = new BasicMaterial()
+    mural_material.texture = mural_texture
 
     mural.addComponent(mural_material)
     mural.addComponent(mural_plane)
@@ -101,8 +101,8 @@ export function CreateMural (mural_params: MuralParams) {
     const background_plane = new PlaneShape()
     
     const background_texture = new Texture(mural_params.server_url_http + "/background")
-    const background_material = new Material()
-    background_material.albedoTexture = background_texture
+    const background_material = new BasicMaterial()
+    background_material.texture = background_texture
 
     background.addComponent(background_material)
     background.addComponent(background_plane)
@@ -120,10 +120,11 @@ export function CreateMural (mural_params: MuralParams) {
     const status_shape = new TextShape()
     status.addComponent(status_shape)
     status.addComponent(new Transform({
-        position: new Vector3(-4.83, -0.2, -0.01),
+        position: new Vector3(-4.83, -0.1, -0.01),
     }))
     status.setParent(main)
     status_shape.hTextAlign = "left"
+    status_shape.vTextAlign = "top"
     status_shape.fontSize = 2
     status_shape.color = Color3.Black()
     status_shape.value = "Connecting..."
@@ -326,7 +327,7 @@ export function CreateMural (mural_params: MuralParams) {
                 const new_texture = new Texture(
                     mural_params.server_url_http + "/image/"+mural_params.mural+"?"+currentSyncId, {samplingMode: 0}
                 ) 
-                mural_material.albedoTexture = new_texture;
+                mural_material.texture = new_texture
             }
         }
     }
